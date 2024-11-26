@@ -2,51 +2,68 @@
 #include <stdlib.h>
 #include <time.h>
 
-// Déclaration de la structure
-
-
-typedef struct {
+typedef struct neur {
     int *poids;
     int biais;
-}Neurone;
+    struct neur* next;
+} Neurone;
 
-// fonction qui initilise le neuronne
-Neurone InitNeurone (int nbPoids) {
-    Neurone neurone;
+typedef Neurone* neurone;
 
-    // allocation mémoire du neuronne
-    neurone.poids = (int*)malloc(nbPoids * sizeof(int));
-    if (neurone.poids == NULL) {
-        perror("Erreur d'allocation mémoire");
+// Fonction qui initialise le neurone
+neurone InitNeurone(int nbPoids) {
+    neurone n = (neurone)malloc(sizeof(Neurone));
+    if (n == NULL) {
+        perror("Erreur d'allocation mémoire pour le neurone");
         exit(EXIT_FAILURE);
     }
 
-    // début de l'allocation aléatoire des poids et biais
+    n->poids = (int*)malloc(nbPoids * sizeof(int));
+    if (n->poids == NULL) {
+        perror("Erreur d'allocation mémoire pour les poids");
+        free(n);
+        exit(EXIT_FAILURE);
+    }
+
+    // Initialisation aléatoire des poids et biais
     srand(time(NULL));
     for (int i = 0; i < nbPoids; i++) {
-        neurone.poids[i] = rand() % 10; 
+        n->poids[i] = rand() % 10;
     }
-    neurone.biais = rand() % 10;
+    n->biais = rand() % 10;
+    n->next = NULL;
 
+    return n;
+}
 
-    return neurone;
-
-    
-};
-
-int  OutNeurone (Neurone neurone, int *ei, int nbPoids) {
+int OutNeurone(neurone n, int *ei, int nbPoids) {
     int somme = 0;
 
-for (int i = 0; i < nbPoids; i++) {
-    if (ei[i] == 1){
-          return 1;
-        }else {
-             somme += ei[i] * neurone.poids[i]; // Calcul de la somme pondérée
-        }   
+
+    for (int i = 0; i < nbPoids; i++) {
+        somme += ei[i] * n->poids[i]; // Calcul de la somme pondérée
     }
-    return somme;
-};
+    somme += n->biais; // Ajout du biais
+
+    if (somme >=n->biais){
+        return 1;
+    }
+    return 0;
+}
 
 int main() {
+    // Exemple d'utilisation
+    int nbPoids = 3;
+    neurone n = InitNeurone(nbPoids);
+    
+    int entrees[] = {1, 2, 3};
+    int sortie = OutNeurone(n, entrees, nbPoids);
+    
+    printf("Sortie du neurone : %d\n", sortie);
 
+    // Libération de la mémoire
+    free(n->poids);
+    free(n);
+
+    return 0;
 }
