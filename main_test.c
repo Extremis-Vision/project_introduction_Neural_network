@@ -28,7 +28,7 @@ neurone InitNeurone(int nbPoids) {
     srand(time(NULL));
     for (int i = 0; i < nbPoids; i++) {
         n->poids[i] = rand() % 10;
-        printf("pour le %d-eme poids la valeur : %d\n", i, n->poids[i]); // Correction ici
+        printf("neurone n %d = %d\n", i, n->poids[i]); // Correction ici
     }
     n->biais = rand() % 10;
     printf("Le biais est %d \n",n->biais);
@@ -41,13 +41,13 @@ int OutNeurone(neurone n, int *ei, int nbPoids) {
     for (int i = 0; i < nbPoids; i++) {
         somme += ei[i] * n->poids[i]; // Calcul de la somme pondérée
         printf("%d * %d",ei[i], n->poids[i]);
-        if (i == nbPoids - 1){
+        if (i == (nbPoids - 1)){
             printf(" = ");
         }else {
             printf(" + ");
         }
     }
-    printf("= %d \n",somme);
+    printf(" %d \n",somme);
     return somme >= n->biais ? 1 : 0; // Retourne 1 si la somme est positive
 }
 
