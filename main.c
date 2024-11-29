@@ -5,7 +5,7 @@
 typedef struct neur {
     int *poids;
     int biais;
-    struct neur* next;
+    struct neur* next; // Pourquoi ici ??? 
 } Neurone;
 
 typedef Neurone* neurone;
