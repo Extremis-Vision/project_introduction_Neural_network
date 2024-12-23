@@ -2,18 +2,20 @@
 #include <stdlib.h>
 #include <time.h>
 
+
+// Définition de la structure Neurone :
 typedef struct neur {
     int *poids;
     int biais;
-    struct neur* next; // Pourquoi ici ??? 
 } Neurone;
-
 typedef Neurone* neurone;
 
+// Définition de la structure Couche :
 typedef struct couch {
-    neurone value;
+    Neurone actuelle;
     struct couch* next;
 } Couche;
+typedef Couche* couche;
 
 // Fonction qui initialise le neurone
 neurone InitNeurone(int nbPoids) {
@@ -31,94 +33,112 @@ neurone InitNeurone(int nbPoids) {
     }
 
     // Initialisation aléatoire des poids et biais
-    srand(time(NULL));
     for (int i = 0; i < nbPoids; i++) {
         n->poids[i] = rand() % 10;
+        printf("neurone n %d = %d\n", i, n->poids[i]);
     }
     n->biais = rand() % 10;
-    n->next = NULL;
-
+    printf("Le biais est %d\n", n->biais);
     return n;
 }
 
-int OutNeurone(neurone n, int *ei, int nbPoids) {
-    int somme = 0;
-
-    for (int i = 0; i < nbPoids; i++) {
+// Fonction qui calcule la sortie du neurone
+int OutNeurone(neurone n, int *ei) {
+    int somme = 0,nbPoids = sizeof(ei);
+    for (int i = 0; i < (nbPoids-1); i++) {
         somme += ei[i] * n->poids[i]; // Calcul de la somme pondérée
+        printf("%d * %d", ei[i], n->poids[i]);
+        if (i == (nbPoids - 2)) {
+            printf(" = ");
+        } else {
+            printf(" + ");
+        }
     }
-    somme += n->biais; // Ajout du biais
-
-    return somme >= n->biais ? 1 : 0;
+    printf(" %d\n", somme);
+    return somme >= n->biais ? 1 : 0; // Retourne 1 si la somme est positive
 }
 
-Couche* InitCouche(int nbNeuronnes, int nbPoids) {
+// Fonction qui initialise une couche de neurones
+couche InitCouche(int nbNeurones, int nbEntrer) {
     Couche* tete = NULL;
+    Couche* courant = NULL;
 
-    for (int i = 0; i < nbNeuronnes; i++) {
+    for (int i = 0; i < nbNeurones; i++) {
         Couche* nouvelleCouche = (Couche*)malloc(sizeof(Couche));
         if (nouvelleCouche == NULL) {
             perror("Erreur d'allocation mémoire pour la couche");
             exit(EXIT_FAILURE);
         }
-        nouvelleCouche->value = InitNeurone(nbPoids);
+        nouvelleCouche->actuelle = *InitNeurone(nbEntrer);  // Initialisation du neurone
         nouvelleCouche->next = NULL;
 
         if (tete == NULL) {
             tete = nouvelleCouche;
         } else {
-            Couche* courant = tete;
-            while (courant->next != NULL) {
-                courant = courant->next;
-            }
             courant->next = nouvelleCouche;
         }
+        courant = nouvelleCouche;
     }
 
     return tete;
 }
 
-Couche Outcouche(){
-
-};
-
-void FreeCouche(Couche* couche) {
-    while (couche != NULL) {
-        Couche* temp = couche;
-        couche = couche->next;
-
-        free(temp->value->poids);
-        free(temp->value);
-        free(temp);
+// Fonction qui libère la mémoire d'une couche
+void freeCouche(couche c) {
+    Couche* current = c;
+    while (current != NULL) {
+        Couche* next = current->next;
+        free(current->actuelle.poids);  // Libérer la mémoire des poids
+        free(current);  // Libérer la mémoire de la couche
+        current = next;
     }
 }
 
-int main() {
-    // Exemple d'utilisation
-    int nbPoids = 3;
-    int nbNeuronnes = 5;
+// Fonction qui calcule les sorties de la couche
+int *Outcouche(couche coucheEntre, int *ei) {
+    int *liste = (int *)malloc( sizeof(ei) * sizeof(int));  // Allocation de mémoire pour la liste
+    int i = 0;
 
-    Couche* couche = InitCouche(nbNeuronnes, nbPoids);
-
-    // Exemple de calcul avec tous les neurones de la couche
-    int entrees[] = {1, 2, 3};
-
-    Couche* currentCouche = couche;
-    
-    int index = 0;
-    
-    while (currentCouche != NULL) {
-        if (currentCouche->value != NULL) {
-            int sortie = OutNeurone(currentCouche->value, entrees, nbPoids);
-            printf("Sortie du neurone %d de la couche : %d\n", index + 1, sortie);
-        }
-        
-        currentCouche = currentCouche->next;
-        index++;
+    if (liste == NULL) {
+        printf("Erreur d'allocation de mémoire !\n");
+        return NULL;  // Retourner NULL si l'allocation échoue
     }
 
-    // Libération de la mémoire
-    FreeCouche(couche);
+    while (&coucheEntre->actuelle != NULL) {
+        liste[i] = OutNeurone(&coucheEntre->actuelle, ei);
+        i++;
+        coucheEntre = coucheEntre->next;  // Passer au neurone suivant dans la couche
+    }
+
+    // Afficher les valeurs dans liste
+    printf("Liste des sorties : ");
+    for (int i = 0; i < sizeof(ei); i++) {
+        printf("%d ", liste[i]);
+    }
+    printf("\n");
+
+    return liste;  // Retourner la liste des sorties
+}
+
+int main() {
+    srand(time(NULL));  // Initialisation du générateur de nombres aléatoires une seule fois
+
+    // Exemple d'utilisation
+    int nbPoids = 3;
+
+    // Définition des entrées
+    int entrees[] = {1, 0, 0}; // Entrée pour le neurone
+
+    // Initialisation d'une couche de neurones
+    int nbNeurones = 5;
+    couche c = InitCouche(nbNeurones, nbPoids);
+
+    // Calcul des sorties de la couche
+    int *sorties = Outcouche(c, entrees);
+
+    // Libération de la mémoire pour la couche
+    free(sorties);  // Libérer les sorties
+    freeCouche(c);  // Libérer la mémoire pour la couche de neurones
 
     return 0;
 }
