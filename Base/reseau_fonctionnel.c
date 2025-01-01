@@ -125,6 +125,50 @@ couche InitReseau(int nbre_couches, int *nbre_neur_couche, int nbEntrer) {
     return tete;
 }
 
+// Fonction pour afficher la composition d'une couche
+void AfficherCouche(couche coucheEntre, int nbEntrer, int nbNeurones) {
+    couche courant = coucheEntre;
+    for (int i = 0; i < nbNeurones; i++) {
+        printf("  Neurone %d : Poids [", i + 1);
+        for (int j = 0; j < nbEntrer; j++) {
+            printf("%d", courant->actuelle->poids[j]);
+            if (j < nbEntrer - 1) {
+                printf(", ");
+            }
+        }
+        printf("], Biais = %d\n", courant->actuelle->biais);
+        courant = courant->next;
+    }
+}
+
+// Fonction pour tester les couches
+void TestReseau(couche reseau, int *entrees, int nbre_couches, int *nbre_neur_couche, int nbEntrer) {
+    printf("Test du réseau :\n");
+    couche courant = reseau;
+    int *sorties = entrees;
+
+    for (int i = 0; i < nbre_couches; i++) {
+        printf("Couche %d:\n", i + 1);
+
+        // Afficher la composition de la couche
+        printf("  Composition :\n");
+        AfficherCouche(courant, nbEntrer, nbre_neur_couche[i]);
+
+        // Calcul des sorties de la couche
+        printf("  Sorties : ");
+        sorties = Outcouche(courant, sorties, nbEntrer, nbre_neur_couche[i]);
+        for (int j = 0; j < nbre_neur_couche[i]; j++) {
+            printf("%d ", sorties[j]);
+        }
+        printf("\n");
+
+        // Mise à jour des entrées et passage à la couche suivante
+        nbEntrer = nbre_neur_couche[i];
+        courant = courant->next;
+    }
+    free(sorties);
+}
+
 // Fonction principale
 int main() {
     srand(time(NULL));  // Initialisation du générateur de nombres aléatoires
@@ -138,18 +182,10 @@ int main() {
     // Initialisation du réseau
     couche reseau = InitReseau(nbre_couches, nbre_neur_couche, nbEntrer);
 
-    // Calcul des sorties du réseau (par couche)
-    couche courant = reseau;
-    int *sorties = entrees;
-    for (int i = 0; i < nbre_couches; i++) {
-        int nbNeurones = nbre_neur_couche[i];
-        sorties = Outcouche(courant, sorties, nbEntrer, nbNeurones);
-        nbEntrer = nbNeurones;  // Mise à jour des entrées pour la couche suivante
-        courant = courant->next;
-    }
+    // Test du réseau
+    TestReseau(reseau, entrees, nbre_couches, nbre_neur_couche, nbEntrer);
 
     // Libération de la mémoire
-    free(sorties);
     freeCouche(reseau);
 
     return 0;
