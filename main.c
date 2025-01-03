@@ -134,6 +134,106 @@ couche InitCoucheNOT(int nbNeurones, int nbEntrer) {
 
     return tete;
 }
+// OU
+neurone InitNeuroneOU(int nbPoids) {
+    neurone n = (neurone)malloc(sizeof(Neurone));
+    if (n == NULL) {
+        perror("Erreur d'allocation mémoire pour le neurone");
+        exit(EXIT_FAILURE);
+    }
+
+    n->poids = (int*)malloc(nbPoids * sizeof(int));
+    if (n->poids == NULL) {
+        perror("Erreur d'allocation mémoire pour les poids");
+        free(n);
+        exit(EXIT_FAILURE);
+    }
+
+    // Poids fixés à 1 et biais fixé à 1 (seuil minimum pour une opération OU)
+    for (int i = 0; i < nbPoids; i++) {
+        n->poids[i] = 1;
+    }
+    n->biais = 1;
+
+    return n;
+}
+couche InitCoucheOU(int nbNeurones, int nbEntrer) {
+    couche tete = NULL;
+    couche courant = NULL;
+
+    for (int i = 0; i < nbNeurones; i++) {
+        couche nouvelleCouche = (couche)malloc(sizeof(Couche));
+        if (nouvelleCouche == NULL) {
+            perror("Erreur d'allocation mémoire pour la couche");
+            exit(EXIT_FAILURE);
+        }
+
+        nouvelleCouche->actuelle = InitNeuroneOU(nbEntrer); // Initialisation du neurone OU
+        nouvelleCouche->next = NULL;
+
+        if (tete == NULL) {
+            tete = nouvelleCouche;
+        } else {
+            courant->next = nouvelleCouche;
+        }
+        courant = nouvelleCouche;
+    }
+
+    return tete;
+}
+
+
+// ET 
+
+
+neurone InitNeuroneET(int nbPoids) {
+    neurone n = (neurone)malloc(sizeof(Neurone));
+    if (n == NULL) {
+        perror("Erreur d'allocation mémoire pour le neurone");
+        exit(EXIT_FAILURE);
+    }
+
+    n->poids = (int*)malloc(nbPoids * sizeof(int));
+    if (n->poids == NULL) {
+        perror("Erreur d'allocation mémoire pour les poids");
+        free(n);
+        exit(EXIT_FAILURE);
+    }
+
+    // Poids fixés à 1 et biais fixé au nombre d'entrées (nbPoids)
+    for (int i = 0; i < nbPoids; i++) {
+        n->poids[i] = 1;
+    }
+    n->biais = nbPoids;
+
+    return n;
+}
+
+
+couche InitCoucheET(int nbNeurones, int nbEntrer) {
+    couche tete = NULL;
+    couche courant = NULL;
+
+    for (int i = 0; i < nbNeurones; i++) {
+        couche nouvelleCouche = (couche)malloc(sizeof(Couche));
+        if (nouvelleCouche == NULL) {
+            perror("Erreur d'allocation mémoire pour la couche");
+            exit(EXIT_FAILURE);
+        }
+
+        nouvelleCouche->actuelle = InitNeuroneET(nbEntrer); // Initialisation du neurone ET
+        nouvelleCouche->next = NULL;
+
+        if (tete == NULL) {
+            tete = nouvelleCouche;
+        } else {
+            courant->next = nouvelleCouche;
+        }
+        courant = nouvelleCouche;
+    }
+
+    return tete;
+}
 
 // === Fonctions de calcul et affichage ===
 
@@ -179,7 +279,7 @@ void AfficherCouche(couche coucheEntre, int nbEntrer, int nbNeurones) {
     }
 }
 
-
+// vider les réseaux
 void freeCouche(couche c) {
     couche courant = c;
     while (courant != NULL) {
@@ -191,80 +291,103 @@ void freeCouche(couche c) {
     }
 }
 
-// Test du réseau général
-void TestReseau(couche reseau, int *entrees, int nbre_couches, int *nbre_neur_couche, int nbEntrer) {
-    printf("Test du réseau :\n");
-    couche courant = reseau;
-    int *sorties = entrees;
-
-    for (int i = 0; i < nbre_couches; i++) {
-        printf("Couche %d:\n", i + 1);
-        AfficherCouche(courant, nbEntrer, nbre_neur_couche[i]);
-        sorties = Outcouche(courant, sorties, nbEntrer, nbre_neur_couche[i]);
-        printf("  Sorties : ");
-        for (int j = 0; j < nbre_neur_couche[i]; j++) {
-            printf("%d ", sorties[j]);
-        }
-        printf("\n");
-        nbEntrer = nbre_neur_couche[i];
-        courant = courant->next;
-    }
-    free(sorties);
-}
-
 // === Fonction principale ===
 int main() {
     srand(time(NULL));
 
     // Définir les entrées possibles
-    int entrees[4][2] = {
-        {0, 0}, {0, 1}, {1, 0}, {1, 1}
-    };
-
-    // Tester la fonction AND
-    printf("Test de la fonction AND :\n");
-    for (int i = 0; i < 4; i++) {
-        int A = entrees[i][0];
-        int B = entrees[i][1];
-        int sortieAND = A & B;
-        printf("Entrée: A = %d, B = %d | Sortie: %d\n", A, B, sortieAND);
-    }
-
-    // Tester la fonction OR
-    printf("\nTest de la fonction OR :\n");
-    for (int i = 0; i < 4; i++) {
-        int A = entrees[i][0];
-        int B = entrees[i][1];
-        int sortieOR = A | B;
-        printf("Entrée: A = %d, B = %d | Sortie: %d\n", A, B, sortieOR);
-    }
-
-    // Tester la fonction NOT
-    printf("\nTest de la fonction NOT :\n");
-    for (int i = 0; i < 2; i++) {
-        int A = i;
-        int sortieNOT = !A;
-        printf("Entrée: A = %d | Sortie: %d\n", A, sortieNOT);
-    }
-
-    // Tester un réseau multicouche avec A, B, C
-    printf("\nTest d'un réseau multicouche avec A, B, C :\n");
-    int entreesABC[8][3] = {
+    int entrees[8][3] = {
         {0, 0, 0}, {0, 0, 1}, {0, 1, 0}, {0, 1, 1},
         {1, 0, 0}, {1, 0, 1}, {1, 1, 0}, {1, 1, 1}
     };
 
-    for (int i = 0; i < 8; i++) {
-        int A = entreesABC[i][0];
-        int B = entreesABC[i][1];
-        int C = entreesABC[i][2];
-
-        // Exemple : une logique qui combine les fonctions AND et OR
-        int sortie1 = A & B;       // A AND B
-        int sortie2 = sortie1 | C; // (A AND B) OR C
-
-        printf("Entrée: A = %d, B = %d, C = %d | Sortie: %d\n", A, B, C, sortie2);
+    // === Tester la fonction ET ===
+// === Tester la fonction ET ===
+    printf("Test de la fonction ET :\n");
+    couche reseauET = InitCoucheET(1, 2); // 1 neurone pour l'opération ET, 2 entrées
+    for (int i = 0; i < 4; i++) {
+        int A = i / 2;  // Premier bit : 0, 0, 1, 1
+        int B = i % 2;  // Second bit  : 0, 1, 0, 1
+        int *sortiesET = Outcouche(reseauET, (int[]){A, B}, 2, 1);  // Calcul de la sortie
+        printf("Entrée: A = %d, B = %d | Sortie ET : %d\n", A, B, sortiesET[0]);
+        free(sortiesET);
     }
+    freeCouche(reseauET);
+
+       // === Tester la fonction OU ===
+    printf("\nTest de la fonction OU :\n");
+    couche reseauOU = InitCoucheOU(1, 2); // 1 neurone pour l'opération OU, 2 entrées
+    for (int i = 0; i < 4; i++) {
+        int A = i / 2;  // Premier bit : 0, 0, 1, 1
+        int B = i % 2;  // Second bit  : 0, 1, 0, 1
+        int *sortiesOU = Outcouche(reseauOU, (int[]){A, B}, 2, 1);  // Calcul de la sortie
+        printf("Entrée: A = %d, B = %d | Sortie OU : %d\n", A, B, sortiesOU[0]);
+        free(sortiesOU);
+    }
+    freeCouche(reseauOU);
+    
+    // === Tester la fonction NOT ===
+    printf("\nTest de la fonction NOT :\n");
+    couche reseauNOT = InitCoucheNOT(1, 1); // 1 neurone pour l'opération NOT, 1 entrée
+    for (int i = 0; i < 2; i++) {
+        int A = i;  // A = 0 ou 1
+        int *sortiesNOT = Outcouche(reseauNOT, (int[]){A}, 1, 1);  // Calcul de la sortie
+        printf("Entrée: A = %d | Sortie NOT : %d\n", A, sortiesNOT[0]);
+        free(sortiesNOT);
+    }
+    freeCouche(reseauNOT);
+
+    // === Tester l'expression (A ET (non B) ET C) OU (A ET (non C)) ===
+    printf("\nTest de l'expression (A ET (non B) ET C) OU (A ET (non C)) :\n");
+
+    // Initialisation des couches nécessaires
+    couche reseauET1 = InitCoucheET(1, 2);  // Pour A ET (non B)
+    couche reseauET2 = InitCoucheET(1, 2);  // Pour le résultat de la première ET combinée avec C
+    couche reseauOUFinal = InitCoucheOU(1, 2); // Pour le OU final
+    couche reseauNOT_B = InitCoucheNOT(1, 1); // Pour NOT B
+    couche reseauNOT_C = InitCoucheNOT(1, 1); // Pour NOT C
+
+    for (int i = 0; i < 8; i++) {
+        int A = entrees[i][0];
+        int B = entrees[i][1];
+        int C = entrees[i][2];
+
+        // Calculer NOT B
+        int *sortieNOT_B = Outcouche(reseauNOT_B, (int[]){B}, 1, 1);
+
+        // Calculer A ET (non B)
+        int *sortieET1 = Outcouche(reseauET1, (int[]){A, sortieNOT_B[0]}, 2, 1);
+
+        // Calculer A ET (non B) ET C
+        int *sortieET2 = Outcouche(reseauET2, (int[]){sortieET1[0], C}, 2, 1);
+
+        // Calculer NOT C
+        int *sortieNOT_C = Outcouche(reseauNOT_C, (int[]){C}, 1, 1);
+
+        // Calculer A ET (non C)
+        int *sortieET3 = Outcouche(reseauET1, (int[]){A, sortieNOT_C[0]}, 2, 1);
+
+        // Calculer le OU final : (A ET (non B) ET C) OU (A ET (non C))
+        int *sortieOU = Outcouche(reseauOUFinal, (int[]){sortieET2[0], sortieET3[0]}, 2, 1);
+
+        // Afficher les résultats
+        printf("Entrées: A = %d, B = %d, C = %d | Sortie = %d\n", A, B, C, sortieOU[0]);
+
+        // Libérer les mémoires intermédiaires
+        free(sortieNOT_B);
+        free(sortieET1);
+        free(sortieET2);
+        free(sortieNOT_C);
+        free(sortieET3);
+        free(sortieOU);
+    }
+
+    // Libération des couches
+    freeCouche(reseauET1);
+    freeCouche(reseauET2);
+    freeCouche(reseauOUFinal);
+    freeCouche(reseauNOT_B);
+    freeCouche(reseauNOT_C);
 
     return 0;
 }

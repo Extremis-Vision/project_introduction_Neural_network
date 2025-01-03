@@ -63,31 +63,6 @@ neurone InitNeuroneET(int nbPoids) {
 
     return n;
 }
-
-neurone InitNeuroneOU(int nbPoids) {
-    neurone n = (neurone)malloc(sizeof(Neurone));
-    if (n == NULL) {
-        perror("Erreur d'allocation mémoire pour le neurone");
-        exit(EXIT_FAILURE);
-    }
-
-    n->poids = (int*)malloc(nbPoids * sizeof(int));
-    if (n->poids == NULL) {
-        perror("Erreur d'allocation mémoire pour les poids");
-        free(n);
-        exit(EXIT_FAILURE);
-    }
-
-    // Poids fixés à 1 et biais fixé au nombre d'entrées (nbPoids)
-    for (int i = 0; i < nbPoids; i++) {
-        n->poids[i] = 1;
-    }
-    n->biais = 1;
-
-    return n;
-}
-
-
 // Fonction qui calcule la sortie d'un neurone
 int OutNeurone(neurone n, int *ei, int nbEntrer) {
     int somme = 0;
