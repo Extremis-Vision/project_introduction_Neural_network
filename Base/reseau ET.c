@@ -31,11 +31,35 @@ neurone InitNeurone(int nbPoids) {
         exit(EXIT_FAILURE);
     }
 
-    // Initialisation aléatoire des poids et biais
+    // Initialisation des poids et biais aléatoires
     for (int i = 0; i < nbPoids; i++) {
         n->poids[i] = rand() % 10;
     }
     n->biais = rand() % 10;
+
+    return n;
+}
+
+// Fonction pour initialiser un neurone ET
+neurone InitNeuroneET(int nbPoids) {
+    neurone n = (neurone)malloc(sizeof(Neurone));
+    if (n == NULL) {
+        perror("Erreur d'allocation mémoire pour le neurone");
+        exit(EXIT_FAILURE);
+    }
+
+    n->poids = (int*)malloc(nbPoids * sizeof(int));
+    if (n->poids == NULL) {
+        perror("Erreur d'allocation mémoire pour les poids");
+        free(n);
+        exit(EXIT_FAILURE);
+    }
+
+    // Poids fixés à 1 et biais fixé au nombre d'entrées (nbPoids)
+    for (int i = 0; i < nbPoids; i++) {
+        n->poids[i] = 1;
+    }
+    n->biais = nbPoids;
 
     return n;
 }
@@ -75,57 +99,31 @@ couche InitCouche(int nbNeurones, int nbEntrer) {
     return tete;
 }
 
-// Fonction qui libère la mémoire d'une couche
-void freeCouche(couche c) {
-    couche courant = c;
-    while (courant != NULL) {
-        couche suivant = courant->next;
-        free(courant->actuelle->poids);  // Libérer les poids
-        free(courant->actuelle);        // Libérer le neurone
-        free(courant);                  // Libérer la couche
-        courant = suivant;
-    }
-}
-
-// Fonction qui calcule les sorties d'une couche
-int *Outcouche(couche coucheEntre, int *ei, int nbEntrer, int nbNeurones) {
-    int *sorties = (int *)malloc(nbNeurones * sizeof(int));
-    if (sorties == NULL) {
-        perror("Erreur d'allocation mémoire pour les sorties");
-        exit(EXIT_FAILURE);
-    }
-
-    couche courant = coucheEntre;
-    for (int i = 0; i < nbNeurones; i++) {
-        sorties[i] = OutNeurone(courant->actuelle, ei, nbEntrer);
-        courant = courant->next;
-    }
-
-    return sorties;
-}
-
-// Fonction qui initialise un réseau de couches
-couche InitReseau(int nbre_couches, int *nbre_neur_couche, int nbEntrer) {
+// Fonction pour initialiser une couche spécifique au réseau ET
+couche InitCoucheET(int nbNeurones, int nbEntrer) {
     couche tete = NULL;
     couche courant = NULL;
 
-    for (int i = 0; i < nbre_couches; i++) {
-        couche nouvelleCouche = InitCouche(nbre_neur_couche[i], nbEntrer);
+    for (int i = 0; i < nbNeurones; i++) {
+        couche nouvelleCouche = (couche)malloc(sizeof(Couche));
+        if (nouvelleCouche == NULL) {
+            perror("Erreur d'allocation mémoire pour la couche");
+            exit(EXIT_FAILURE);
+        }
+
+        nouvelleCouche->actuelle = InitNeuroneET(nbEntrer); // Initialisation du neurone ET
+        nouvelleCouche->next = NULL;
+
         if (tete == NULL) {
             tete = nouvelleCouche;
         } else {
             courant->next = nouvelleCouche;
         }
         courant = nouvelleCouche;
-
-        // Les entrées pour les couches suivantes sont égales au nombre de neurones de la couche actuelle
-        nbEntrer = nbre_neur_couche[i];
     }
 
     return tete;
 }
-
-
 
 // Fonction pour afficher la composition d'une couche
 void AfficherCouche(couche coucheEntre, int nbEntrer, int nbNeurones) {
@@ -143,52 +141,63 @@ void AfficherCouche(couche coucheEntre, int nbEntrer, int nbNeurones) {
     }
 }
 
-// Fonction pour tester les couches
-void TestReseau(couche reseau, int *entrees, int nbre_couches, int *nbre_neur_couche, int nbEntrer) {
-    printf("Test du réseau :\n");
-    couche courant = reseau;
-    int *sorties = entrees;
+// Fonction pour tester un réseau ET
+void TestReseauET(couche reseauET, int nbEntrer) {
+    printf("Test du réseau ET :\n");
 
-    for (int i = 0; i < nbre_couches; i++) {
-        printf("Couche %d:\n", i + 1);
+    // Afficher la composition du neurone ET
+    AfficherCouche(reseauET, nbEntrer, 1);
 
-        // Afficher la composition de la couche
-        printf("  Composition :\n");
-        AfficherCouche(courant, nbEntrer, nbre_neur_couche[i]);
-
-        // Calcul des sorties de la couche
-        printf("  Sorties : ");
-        sorties = Outcouche(courant, sorties, nbEntrer, nbre_neur_couche[i]);
-        for (int j = 0; j < nbre_neur_couche[i]; j++) {
-            printf("%d ", sorties[j]);
+    // Tester toutes les combinaisons possibles d'entrées
+    int totalCombinaisons = 1 << nbEntrer; // 2^nbEntrer combinaisons
+    for (int i = 0; i < totalCombinaisons; i++) {
+        int entrees[nbEntrer];
+        
+        // Générer les entrées binaires
+        for (int j = 0; j < nbEntrer; j++) {
+            entrees[j] = (i >> j) & 1; // Récupérer le bit j de i
         }
-        printf("\n");
 
-        // Mise à jour des entrées et passage à la couche suivante
-        nbEntrer = nbre_neur_couche[i];
-        courant = courant->next;
+        // Calculer la sortie du neurone
+        int sortie = OutNeurone(reseauET->actuelle, entrees, nbEntrer);
+
+        // Afficher les entrées et la sortie correspondante
+        printf("Entrées : [");
+        for (int j = 0; j < nbEntrer; j++) {
+            printf("%d", entrees[j]);
+            if (j < nbEntrer - 1) {
+                printf(", ");
+            }
+        }
+        printf("] -> Sortie : %d\n", sortie);
     }
-    free(sorties);
 }
+
+void freeCouche(couche c) {
+    couche courant = c;
+    while (courant != NULL) {
+        couche suivant = courant->next;
+        free(courant->actuelle->poids);  // Libérer les poids
+        free(courant->actuelle);        // Libérer le neurone
+        free(courant);                  // Libérer la couche
+        courant = suivant;
+    }
+}
+
 
 // Fonction principale
 int main() {
     srand(time(NULL));  // Initialisation du générateur de nombres aléatoires
 
-    // Définition des paramètres du réseau
-    int nbre_couches = 3;
-    int nbre_neur_couche[] = {5, 4, 3};
-    int nbEntrer = 3;                    // Nombre d'entrées pour la première couche
-    int entrees[] = {1, 0, 1};           // Entrées pour le réseau
+    // Réseau ET avec 3 entrées
+    int nbEntrer = 3;  // Nombre d'entrées
+    couche reseauET = InitCoucheET(1, nbEntrer); // 1 neurone pour le réseau ET
 
-    // Initialisation du réseau
-    couche reseau = InitReseau(nbre_couches, nbre_neur_couche, nbEntrer);
-
-    // Test du réseau
-    TestReseau(reseau, entrees, nbre_couches, nbre_neur_couche, nbEntrer);
+    // Test du réseau ET
+    TestReseauET(reseauET, nbEntrer);
 
     // Libération de la mémoire
-    freeCouche(reseau);
+    freeCouche(reseauET);
 
     return 0;
 }
