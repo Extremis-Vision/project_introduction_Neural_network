@@ -3,7 +3,7 @@
 #include <time.h>
 
 // === Définition des structures ===
-typedef struct neur {
+typedef struct {
     int *poids;
     int biais;
 } Neurone;
@@ -211,7 +211,7 @@ neurone InitNeuroneET(int nbPoids) {
 
 
 couche InitCoucheET(int nbNeurones, int nbEntrer) {
-    couche tete = NULL;
+    couche tete = NULL; 
     couche courant = NULL;
 
     for (int i = 0; i < nbNeurones; i++) {
@@ -325,7 +325,7 @@ int main() {
         free(sortiesOU);
     }
     freeCouche(reseauOU);
-    
+
     // === Tester la fonction NOT ===
     printf("\nTest de la fonction NOT :\n");
     couche reseauNOT = InitCoucheNOT(1, 1); // 1 neurone pour l'opération NOT, 1 entrée

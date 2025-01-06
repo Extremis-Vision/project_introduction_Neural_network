@@ -164,7 +164,7 @@ int main() {
     srand(time(NULL));  // Initialisation du générateur de nombres aléatoires
 
     // Réseau OU avec 3 entrées
-    int nbEntrer = 3;  // Nombre d'entrées
+    int nbEntrer = 1;  // Nombre d'entrées
     couche reseauNOT = InitCoucheNOT(1, nbEntrer); // 1 neurone pour le réseau OU
 
     // Test du réseau OU

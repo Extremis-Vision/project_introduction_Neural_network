@@ -10,7 +10,6 @@ typedef struct neur {
 
 typedef Neurone* neurone;
 
-
 // Définition de la structure Couche :
 typedef struct couch {
     Neurone actuelle;
@@ -18,7 +17,6 @@ typedef struct couch {
 } Couche;
 
 typedef Couche* couche;
-
 
 // Définition de l'initialisation des neurones : 
 neurone InitNeurone(int nbPoids) {
@@ -38,14 +36,14 @@ neurone InitNeurone(int nbPoids) {
     // Initialisation aléatoire des poids et biais
     for (int i = 0; i < nbPoids; i++) {
         n->poids[i] = rand() % 10;
-        printf("neurone n %d = %d\n", i, n->poids[i]);
+        printf("Poids[%d] = %d\n", i, n->poids[i]);
     }
     n->biais = rand() % 10;
-    printf("Le biais est %d\n", n->biais);
+    printf("Le biais est : %d\n", n->biais);
     return n;
 }
 
-//  Définition de la fonction sortie des neurones : 
+// Définition de la fonction sortie des neurones : 
 int OutNeurone(neurone n, int *ei, int nbPoids) {
     int somme = 0;
 
@@ -58,27 +56,36 @@ int OutNeurone(neurone n, int *ei, int nbPoids) {
             printf(" + ");
         }
     }
-    printf(" %d\n", somme);
-    return somme >= n->biais ? 1 : 0; // Retourne 1 si la somme est positive
+    printf("%d\n", somme);
+    return somme >= n->biais ? 1 : 0; // Retourne 1 si la somme est >= au biais
 }
 
 int main() {
-    srand(time(NULL));  // Initialisation du générateur de nombres aléatoires une seule fois
+    srand(time(NULL));  // Initialisation du générateur de nombres aléatoires
 
-    // Exemple d'utilisation
+    // Nombre de poids (entrées)
     int nbPoids = 3;
 
     // Initialisation du neurone
+    printf("Initialisation du neurone...\n");
     neurone n = InitNeurone(nbPoids);
 
     // Définition des entrées
-    int entrees[] = {1, 0, 0}; // Entrée pour le neurone
+    int entrees[] = {1, 0, 0}; // Exemple d'entrées
+    printf("\nEntrées pour le neurone : ");
+    for (int i = 0; i < nbPoids; i++) {
+        printf("%d ", entrees[i]);
+    }
+    printf("\n");
 
     // Calcul de la sortie
+    printf("\nCalcul de la sortie...\n");
     int sortie = OutNeurone(n, entrees, nbPoids);
     printf("Sortie du neurone : %d\n", sortie);
 
     // Libération de la mémoire pour le neurone
     free(n->poids);
-    free(n);  
+    free(n);
+
+    return 0;
 }
